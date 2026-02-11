@@ -13,7 +13,7 @@ permissions:
   pull-requests: write
 
 jobs:
-  build-and-test:
+  build-develop:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -39,7 +39,7 @@ jobs:
 
   # JOB MỚI: Tự động đưa code từ develop lên staging
   create-and-merge-to-staging:
-    needs: build-and-test
+    needs: build-develop
     if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
     runs-on: ubuntu-latest
     steps:
