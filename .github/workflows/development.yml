@@ -1,43 +1,45 @@
-name: CI and Auto-Merge to Develop
+name: Tự động merge vào develop
 
 on:
   pull_request:
     branches:
-      - develop  # Chỉ chạy khi PR hướng tới nhánh develop
-    branches_ignore:
-      - staging
+      - develop
+    # Lưu ý: Không thể dùng đồng thời branches và branches_ignore cho cùng một sự kiện pull_request.
+    # Nếu đã chỉ định branches: [develop] thì nó đã tự động bỏ qua các nhánh khác rồi.
+
+permissions:
+  contents: write
+  pull-requests: write
 
 jobs:
-  build:
+  build-and-merge:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # 1. Cài đặt PHP và dependencies
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.2'  # Điều chỉnh theo phiên bản PHP của bạn
+          php-version: '8.2'
           extensions: mbstring, xml, ctype, json, pdo, pdo_mysql
           coverage: none
 
+      # Bước cài đặt và Test (Cần mở comment để đảm bảo code sạch trước khi merge)
       # - name: Install Composer dependencies
-      #   run: composer install --prefer-dist --no-progress --no-suggest
+      #   run: composer install --prefer-dist --no-progress
 
-      # 2. Chạy tests
       # - name: Run Tests
-      #   run: |
-      #     echo "Running tests..."
-      #     vendor/bin/phpunit
-      #     # Hoặc nếu dùng Pest: vendor/bin/pest
-      #     # Hoặc nếu dùng Laravel: php artisan test
+      #   run: php artisan test
 
-      # 3. Tự động merge nếu test pass
+      # 3. Tự động merge PR
       - name: Auto-merge PR
         if: success()
         uses: pascalgn/automerge-action@v0.16.2
         env:
           GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
-          MERGE_METHOD: "merge"  # Hoặc "squash" / "rebase"
-          MERGE_LABELS: ""  # Để trống để merge mọi PR hợp lệ
+          MERGE_METHOD: "merge"
+          MERGE_FILTER_AUTHOR: "" # Có thể lọc người tạo PR nếu muốn
+          MERGE_FORK_PR: "true"
+          MERGE_RETRIES: "6"
+          MERGE_RETRY_SLEEP: "10000"
