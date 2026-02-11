@@ -7,9 +7,7 @@ on:
   pull_request:
     branches:
       - develop
-    # Lưu ý: Không thể dùng đồng thời branches và branches_ignore cho cùng một sự kiện pull_request.
-    # Nếu đã chỉ định branches: [develop] thì nó đã tự động bỏ qua các nhánh khác rồi.
-
+  
 permissions:
   contents: write
   pull-requests: write
@@ -36,11 +34,11 @@ jobs:
 
       # 4. Tự động Merge nếu là Pull Request và các bước trên thành công
       - name: Enable auto-merge
-      if: github.event_name == 'pull_request'
-      run: gh pr merge --auto --merge "$PR_URL"
-      env:
-        PR_URL: ${{ github.event.pull_request.html_url }}
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        if: github.event_name == 'pull_request'
+        run: gh pr merge --auto --merge "$PR_URL"
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       # - name: Auto-merge PR
       #   if: success()
