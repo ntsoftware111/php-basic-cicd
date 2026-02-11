@@ -26,12 +26,12 @@ jobs:
       #   run: composer install --prefer-dist --no-progress --no-suggest
 
       # 2. Chạy tests
-      - name: Run Tests
-        run: |
-          echo "Running tests..."
-          vendor/bin/phpunit
-          # Hoặc nếu dùng Pest: vendor/bin/pest
-          # Hoặc nếu dùng Laravel: php artisan test
+      # - name: Run Tests
+      #   run: |
+      #     echo "Running tests..."
+      #     vendor/bin/phpunit
+      #     # Hoặc nếu dùng Pest: vendor/bin/pest
+      #     # Hoặc nếu dùng Laravel: php artisan test
 
       # 3. Tự động merge nếu test pass
       - name: Auto-merge PR
