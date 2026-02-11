@@ -22,8 +22,8 @@ jobs:
           extensions: mbstring, xml, ctype, json, pdo, pdo_mysql
           coverage: none
 
-      - name: Install Composer dependencies
-        run: composer install --prefer-dist --no-progress --no-suggest
+      # - name: Install Composer dependencies
+      #   run: composer install --prefer-dist --no-progress --no-suggest
 
       # 2. Chạy tests
       - name: Run Tests
