@@ -1,6 +1,9 @@
 name: Tự động merge vào develop
 
 on:
+  push:
+    branches:
+      - develop
   pull_request:
     branches:
       - develop
@@ -15,31 +18,37 @@ jobs:
   build-and-merge:
     runs-on: ubuntu-latest
     steps:
+      # 1. Checkout mã nguồn
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # 2. Cài đặt PHP
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.2'
-          extensions: mbstring, xml, ctype, json, pdo, pdo_mysql
-          coverage: none
+          extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, bcmath, soap, intl, gd, exif, iconv
+          coverage: none    
+      
+      # 3. Kiểm tra cú pháp PHP (Linting)
+      - name: Check PHP Syntax
+        run: find . -name "*.php" -print0 | xargs -0 -n1 php -l
 
-      # Bước cài đặt và Test (Cần mở comment để đảm bảo code sạch trước khi merge)
-      # - name: Install Composer dependencies
-      #   run: composer install --prefer-dist --no-progress
+      # 4. Tự động Merge nếu là Pull Request và các bước trên thành công
+      - name: Enable auto-merge
+      if: github.event_name == 'pull_request'
+      run: gh pr merge --auto --merge "$PR_URL"
+      env:
+        PR_URL: ${{ github.event.pull_request.html_url }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # - name: Run Tests
-      #   run: php artisan test
-
-      # 3. Tự động merge PR
-      - name: Auto-merge PR
-        if: success()
-        uses: pascalgn/automerge-action@v0.16.2
-        env:
-          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
-          MERGE_METHOD: "merge"
-          MERGE_FILTER_AUTHOR: "" # Có thể lọc người tạo PR nếu muốn
-          MERGE_FORK_PR: "true"
-          MERGE_RETRIES: "6"
-          MERGE_RETRY_SLEEP: "10000"
+      # - name: Auto-merge PR
+      #   if: success()
+      #   uses: pascalgn/automerge-action@v0.16.2
+      #   env:
+      #     GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+      #     MERGE_METHOD: "merge"
+      #     MERGE_FILTER_AUTHOR: "" # Có thể lọc người tạo PR nếu muốn
+      #     MERGE_FORK_PR: "true"
+      #     MERGE_RETRIES: "6"
+      #     MERGE_RETRY_SLEEP: "10000"
