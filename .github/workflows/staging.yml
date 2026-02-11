@@ -1,0 +1,36 @@
+name: Auto PR and Merge Develop to Staging
+
+on:
+  push:
+    branches:
+      - staging
+  pull_request:
+    branches:
+      - staging
+
+jobs:
+  build-to-staging:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # 1. Tạo Pull Request từ develop vào staging
+      - name: Create PR to Staging
+        id: create_pr
+        uses: repo-sync/pull-request@v2
+        with:
+          destination_branch: "staging"
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          pr_title: "Auto-merge: develop to staging"
+          pr_body: "Hệ thống tự động đẩy code từ develop lên staging sau khi hoàn tất kiểm tra."
+
+      # 2. Tự động merge PR vừa tạo vào staging
+      - name: Merge PR to Staging
+        uses: pascalgn/automerge-action@v0.16.2
+        env:
+          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+          MERGE_METHOD: "merge"
+          MERGE_FOR_PR_ID: ${{ steps.create_pr.outputs.pr_number }}
