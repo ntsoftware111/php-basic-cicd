@@ -27,6 +27,9 @@
     <h1>Hello World 5!</h1>
     <h2>Nội dung: Xin chào bằng Tiếng Việt</h2>
     <h3>Nội dung: Xin chào bằng Tiếng Anh</h3>
-
+<hr>
+    <h1>Hello World 6!</h1>
+    <h2>Nội dung: Xin chào bằng Tiếng Việt</h2>
+    <h3>Nội dung: Xin chào bằng Tiếng Anh</h3>
 </body>
 </html>
