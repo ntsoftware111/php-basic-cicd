@@ -15,14 +15,14 @@ jobs:
       # 1. Checkout mã nguồn
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0 # Lấy toàn bộ lịch sử để có thể push sang nhánh khác
 
-      # 2. Cấu hình Git
-      - name: Config Git
-        run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+      # 2. Cài đặt PHP
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, bcmath, soap, intl, gd, exif, iconv
+          coverage: none    
 
       # 3. Merge Develop vào Staging và Push
       - name: Sync Develop to Staging
