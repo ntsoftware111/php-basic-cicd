@@ -16,6 +16,7 @@ jobs:
   build-develop:
     runs-on: ubuntu-latest
     steps:
+      # 1. Checkout mã nguồn
       - name: Checkout code
         uses: actions/checkout@v4
 
