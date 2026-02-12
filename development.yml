@@ -40,13 +40,3 @@ jobs:
           PR_URL: ${{ github.event.pull_request.html_url }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # - name: Auto-merge PR
-      #   if: success()
-      #   uses: pascalgn/automerge-action@v0.16.2
-      #   env:
-      #     GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
-      #     MERGE_METHOD: "merge"
-      #     MERGE_FILTER_AUTHOR: "" # Có thể lọc người tạo PR nếu muốn
-      #     MERGE_FORK_PR: "true"
-      #     MERGE_RETRIES: "6"
-      #     MERGE_RETRY_SLEEP: "10000"
