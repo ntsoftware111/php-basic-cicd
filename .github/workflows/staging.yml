@@ -38,7 +38,6 @@ jobs:
           PR_URL: ${{ github.event.pull_request.html_url }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  # JOB MỚI: Tự động đưa code từ develop lên staging
   build-staging:
     needs: build-develop
     if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
@@ -49,6 +48,8 @@ jobs:
 
       - name: Create or Get PR to staging
         id: create_pr
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Hoặc ${{ secrets.GH_PAT }} nếu bạn cần quyền cao hơn
         run: |
           # Kiểm tra xem có PR nào từ develop -> staging đang mở không
           PR_URL=$(gh pr list --base staging --head develop --state open --json url --jq '.[0].url')
@@ -65,11 +66,9 @@ jobs:
           fi
           
           echo "PR_URL=$PR_URL" >> $GITHUB_OUTPUT
-        env:          
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Merge PR to staging
         if: steps.create_pr.outputs.PR_URL != ''
-        run: gh pr merge --merge "${{ steps.create_pr.outputs.PR_URL }}"
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh pr merge --merge "${{ steps.create_pr.outputs.PR_URL }}"
