@@ -1,74 +1,67 @@
 name: Tự động merge và đẩy lên Staging
 
 on:
-  push:
-    branches:
-      - develop
   pull_request:
     branches:
       - develop
+    types: [opened, synchronize, reopened]
 
 permissions:
   contents: write
   pull-requests: write
 
 jobs:
-  build-develop:
+  auto-deploy-pipeline:
     runs-on: ubuntu-latest
     steps:
       # 1. Checkout mã nguồn
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Quan trọng để có lịch sử commit khi merge
 
+      # 2. Setup môi trường & Check Syntax
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.2'
           extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, bcmath, soap, intl, gd, exif, iconv
-          coverage: none    
-      
+          coverage: none
+
       - name: Check PHP Syntax
         run: find . -name "*.php" -print0 | xargs -0 -n1 php -l
 
-      # Tự động Merge PR vào develop (nếu workflow này kích hoạt bởi PR vào develop)
+      # 3. Merge PR hiện tại vào develop
       - name: Merge PR to develop
-        if: github.event_name == 'pull_request'
-        run: gh pr merge --auto --merge "$PR_URL"
-        env:
-          PR_URL: ${{ github.event.pull_request.html_url }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  build-staging:
-    needs: build-develop
-    if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Create or Get PR to staging
-        id: create_pr
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Hoặc ${{ secrets.GH_PAT }} nếu bạn cần quyền cao hơn
-        run: |
-          # Kiểm tra xem có PR nào từ develop -> staging đang mở không
-          PR_URL=$(gh pr list --base staging --head develop --state open --json url --jq '.[0].url')
-          
-          if [ -z "$PR_URL" ]; then
-            echo "No existing PR found. Creating a new one..."
-            PR_URL=$(gh pr create \
-              --base staging \
-              --head develop \
-              --title "Auto-merge: develop to staging" \
-              --body "Tự động chuyển mã nguồn từ develop sang staging.")
-          else
-            echo "Existing PR found: $PR_URL"
-          fi
-          
-          echo "PR_URL=$PR_URL" >> $GITHUB_OUTPUT
-
-      - name: Merge PR to staging
-        if: steps.create_pr.outputs.PR_URL != ''
+        id: merge_dev
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh pr merge --merge "${{ steps.create_pr.outputs.PR_URL }}"
+          PR_URL: ${{ github.event.pull_request.html_url }}
+        run: |
+          echo "Merging PR to develop..."
+          gh pr merge --merge "$PR_URL"
+          # Cập nhật code local sau khi merge để có code mới nhất cho bước sau
+          git pull origin develop
+
+      # 4. Xử lý đẩy lên Staging (Ngay lập tức sau khi dev merge thành công)
+      - name: Create and Merge PR to staging
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Checking for changes between develop and staging..."
+          
+          # Tạo PR từ develop sang staging
+          # Dùng || true để tránh lỗi nếu PR đã tồn tại
+          PR_STAGING_URL=$(gh pr create \
+            --base staging \
+            --head develop \
+            --title "Auto-merge: develop to staging (via PR #${{ github.event.pull_request.number }})" \
+            --body "Tự động chuyển mã nguồn từ develop sang staging sau khi PR #${{ github.event.pull_request.number }} được merge." || \
+            gh pr list --base staging --head develop --state open --json url --jq '.[0].url')
+
+          if [ -n "$PR_STAGING_URL" ]; then
+            echo "Merging PR to staging: $PR_STAGING_URL"
+            gh pr merge --merge "$PR_STAGING_URL"
+          else
+            echo "No changes to merge to staging or PR already handled."
+          fi
