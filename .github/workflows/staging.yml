@@ -3,7 +3,10 @@ name: Deploy từ Develop sang Staging
 on:
   push:
     branches:
-      - staging  # Chạy khi có code mới push vào develop (bao gồm cả sau khi merge PR)
+      - staging
+  pull_request:
+    branches:
+      - staging
 
 permissions:
   contents: write
@@ -24,11 +27,14 @@ jobs:
           extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, bcmath, soap, intl, gd, exif, iconv
           coverage: none    
 
-      # 3. Merge Develop vào Staging và Push
-      - name: Sync Develop to Staging
-        run: |
-          git checkout staging || git checkout -b staging
-          git merge origin/develop --ff-only
-          git push origin staging
+     # 3. Kiểm tra cú pháp PHP (Linting)
+      - name: Check PHP Syntax
+        run: find . -name "*.php" -print0 | xargs -0 -n1 php -l
+
+      # 4. Tự động Merge nếu là Pull Request và các bước trên thành công
+      - name: Enable auto-merge
+        if: github.event_name == 'pull_request'
+        run: gh pr merge --auto --merge "$PR_URL"
         env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
