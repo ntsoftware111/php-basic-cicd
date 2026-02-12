@@ -38,7 +38,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   # JOB MỚI: Tự động đưa code từ develop lên staging
-  create-and-merge-to-staging:
+  build-staging:
     needs: build-develop
     if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
     runs-on: ubuntu-latest
@@ -52,14 +52,15 @@ jobs:
           pr_url=$(gh pr create \
             --base staging \
             --head develop \
-            --title "🚀 Auto-merge: develop to staging" \
+            --title "Auto-merge: develop to staging" \
             --body "Tự động chuyển mã nguồn từ develop sang staging sau khi kiểm tra cú pháp thành công.")
           echo "PR_URL=$pr_url" >> $GITHUB_OUTPUT
-        env:
+        env:          
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Merge PR to staging
         if: steps.create_pr.outputs.PR_URL != ''
         run: gh pr merge --merge "${{ steps.create_pr.outputs.PR_URL }}"
         env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
