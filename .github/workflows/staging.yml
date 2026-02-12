@@ -44,6 +44,8 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
     runs-on: ubuntu-latest
     steps:
+      - name: Set GH_TOKEN
+        run: echo "GH_TOKEN=${{ secrets.GH_PAT }}" >> $GITHUB_ENV
       - name: Checkout code
         uses: actions/checkout@v4
 
@@ -65,11 +67,7 @@ jobs:
           fi
           
           echo "PR_URL=$PR_URL" >> $GITHUB_OUTPUT
-        env:          
-          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
 
       - name: Merge PR to staging
         if: steps.create_pr.outputs.PR_URL != ''
         run: gh pr merge --merge "${{ steps.create_pr.outputs.PR_URL }}"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
