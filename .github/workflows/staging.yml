@@ -1,0 +1,34 @@
+name: Deploy từ Develop sang Staging
+
+on:
+  push:
+    branches:
+      - staging  # Chạy khi có code mới push vào develop (bao gồm cả sau khi merge PR)
+
+permissions:
+  contents: write
+
+jobs:
+  sync-to-staging:
+    runs-on: ubuntu-latest
+    steps:
+      # 1. Checkout mã nguồn
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Lấy toàn bộ lịch sử để có thể push sang nhánh khác
+
+      # 2. Cấu hình Git
+      - name: Config Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      # 3. Merge Develop vào Staging và Push
+      - name: Sync Develop to Staging
+        run: |
+          git checkout staging || git checkout -b staging
+          git merge origin/develop --ff-only
+          git push origin staging
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
